@@ -127,7 +127,7 @@ body {
 
 .split-layout {
     display: grid;
-    grid-template-columns: 70% 30%;
+    grid-template-columns: 65% 35%;
     gap: var(--spacing-lg);
     height: calc(100vh - 140px);
 }
@@ -411,7 +411,8 @@ body {
 }
 
 .btn-icon {
-    font-size: var(--font-size-lg);
+    width: 20px;
+    height: 20px;
 }
 
 /* ============================================
@@ -456,7 +457,7 @@ body {
 }
 
 /* ============================================
-   Cards Grid (Visual Overview)
+   Cards Grid with Progress Rings
    ============================================ */
 
 .cards-grid {
@@ -466,60 +467,53 @@ body {
     margin-bottom: var(--spacing-md);
 }
 
-.card-block {
-    aspect-ratio: 1;
-    border-radius: var(--radius-sm);
+.card-ring {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    color: white;
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-    position: relative;
+    transition: transform 0.2s ease;
 }
 
-.card-block:hover {
-    transform: scale(1.05);
-    box-shadow: var(--shadow-md);
+.card-ring:hover {
+    transform: scale(1.08);
 }
 
-.card-block.current {
-    box-shadow: 0 0 0 3px var(--color-accent);
+.card-ring.current {
+    filter: drop-shadow(0 0 6px var(--color-accent));
 }
 
-.card-block.high {
-    background: var(--color-recall-high);
+.card-ring svg {
+    display: block;
 }
 
-.card-block.medium {
-    background: var(--color-recall-medium);
-}
-
-.card-block.low {
-    background: var(--color-recall-low);
-}
-
-.card-block-tooltip {
+.card-ring-content {
     position: absolute;
-    bottom: 100%;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
-    background: var(--color-text);
-    color: white;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-xs);
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s ease;
-    z-index: 10;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
 }
 
-.card-block:hover .card-block-tooltip {
-    opacity: 1;
+.card-ring-num {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.card-ring-percent {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+}
+
+.progress-ring-circle {
+    transition: stroke-dashoffset 0.5s ease, stroke 0.3s ease;
 }
 
 /* Legend */
@@ -528,6 +522,7 @@ body {
     gap: var(--spacing-md);
     font-size: var(--font-size-xs);
     color: var(--color-text-secondary);
+    flex-wrap: wrap;
 }
 
 .legend-item {
@@ -555,7 +550,7 @@ body {
 }
 
 /* ============================================
-   Explanation Box
+   Explanation Box with SVG Icons
    ============================================ */
 
 .explanation-box {
@@ -574,9 +569,10 @@ body {
 }
 
 .explanation-icon {
-    font-size: var(--font-size-lg);
-    width: 28px;
-    text-align: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: var(--color-accent);
 }
 
 .explanation-content {

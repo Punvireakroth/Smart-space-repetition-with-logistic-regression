@@ -6,6 +6,24 @@
  */
 
 // ============================================
+// Configuration - Adjust these for visual impact
+// ============================================
+
+const CONFIG = {
+    // Thresholds for color coding (more aggressive for faster visual distinction)
+    THRESHOLD_HIGH: 0.60,    // 60%+ = strong (green)
+    THRESHOLD_MEDIUM: 0.35,  // 35-60% = okay (yellow)
+    // Below 35% = weak (red)
+    
+    // Amplification factor - makes small changes more visible
+    // Set > 1 to exaggerate changes, 1 = no change
+    AMPLIFY_FACTOR: 1.3,
+    
+    // Total cards for progress tracking
+    TOTAL_CARDS: 8
+};
+
+// ============================================
 // State Management
 // ============================================
 
@@ -139,20 +157,48 @@ async function resetProgress() {
 // Helper Functions
 // ============================================
 
+/**
+ * Amplify probability to make changes more visible
+ * Uses a non-linear transformation centered at 0.5
+ */
+function amplifyProbability(probability) {
+    // Apply amplification: push values away from 0.5
+    const centered = probability - 0.5;
+    const amplified = 0.5 + centered * CONFIG.AMPLIFY_FACTOR;
+    // Clamp to valid range
+    return Math.max(0, Math.min(1, amplified));
+}
+
+/**
+ * Get recall level based on adjusted thresholds
+ */
 function getRecallLevel(probability) {
-    if (probability >= 0.7) return 'high';
-    if (probability >= 0.4) return 'medium';
+    const amplified = amplifyProbability(probability);
+    if (amplified >= CONFIG.THRESHOLD_HIGH) return 'high';
+    if (amplified >= CONFIG.THRESHOLD_MEDIUM) return 'medium';
     return 'low';
+}
+
+/**
+ * Get color for recall probability
+ */
+function getRecallColor(probability) {
+    const level = getRecallLevel(probability);
+    if (level === 'high') return '#22c55e';  // green
+    if (level === 'medium') return '#f59e0b'; // yellow
+    return '#ef4444'; // red
 }
 
 function getRecallInterpretation(probability) {
     const percent = Math.round(probability * 100);
-    if (probability >= 0.7) {
-        return `You're likely to remember this card (${percent}% chance). It's being reviewed to strengthen your memory.`;
-    } else if (probability >= 0.4) {
-        return `There's a moderate chance you'll remember this (${percent}%). Good time to review!`;
+    const level = getRecallLevel(probability);
+    
+    if (level === 'high') {
+        return `Strong memory (${percent}%). You'll likely remember this. Reviewing strengthens it further.`;
+    } else if (level === 'medium') {
+        return `Moderate recall (${percent}%). Could go either way - good time to review!`;
     } else {
-        return `You might forget this card (only ${percent}% chance of recall). This is why the model prioritized it!`;
+        return `Weak memory (${percent}%). High chance of forgetting - that's why it's prioritized!`;
     }
 }
 
@@ -185,9 +231,9 @@ function renderDifficulty(difficulty) {
     let stars = '';
     for (let i = 0; i < 5; i++) {
         if (i < difficulty) {
-            stars += '<span class="filled">★</span>';
+            stars += '<span class="filled">&#9733;</span>';
         } else {
-            stars += '<span class="empty">☆</span>';
+            stars += '<span class="empty">&#9734;</span>';
         }
     }
     return stars;
@@ -255,10 +301,55 @@ function updateStats(stats) {
     elements.statCorrect.textContent = stats.correct;
     elements.statAccuracy.textContent = Math.round(stats.accuracy * 100) + '%';
     
-    // Update progress bar (8 cards total now)
-    const progressPercent = Math.min(stats.total / 8 * 100, 100);
+    // Update progress bar
+    const progressPercent = Math.min(stats.total / CONFIG.TOTAL_CARDS * 100, 100);
     elements.progressBar.style.width = progressPercent + '%';
-    elements.progressText.textContent = `${stats.total} of 8 cards reviewed today`;
+    elements.progressText.textContent = `${stats.total} of ${CONFIG.TOTAL_CARDS} cards reviewed today`;
+}
+
+/**
+ * Create SVG circular progress ring
+ */
+function createProgressRing(percent, color, cardNum, isCurrent) {
+    const size = 56;
+    const strokeWidth = 4;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = radius * 2 * Math.PI;
+    const offset = circumference - (percent / 100) * circumference;
+    
+    return `
+        <div class="card-ring ${isCurrent ? 'current' : ''}" data-card-id="${cardNum - 1}">
+            <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+                <!-- Background circle -->
+                <circle 
+                    cx="${size/2}" 
+                    cy="${size/2}" 
+                    r="${radius}"
+                    fill="none"
+                    stroke="#e5e7eb"
+                    stroke-width="${strokeWidth}"
+                />
+                <!-- Progress circle -->
+                <circle 
+                    cx="${size/2}" 
+                    cy="${size/2}" 
+                    r="${radius}"
+                    fill="none"
+                    stroke="${color}"
+                    stroke-width="${strokeWidth}"
+                    stroke-linecap="round"
+                    stroke-dasharray="${circumference}"
+                    stroke-dashoffset="${offset}"
+                    transform="rotate(-90 ${size/2} ${size/2})"
+                    class="progress-ring-circle"
+                />
+            </svg>
+            <div class="card-ring-content">
+                <span class="card-ring-num">${cardNum}</span>
+                <span class="card-ring-percent">${percent}%</span>
+            </div>
+        </div>
+    `;
 }
 
 function updateCardsGrid() {
@@ -267,18 +358,11 @@ function updateCardsGrid() {
     const currentId = state.currentCard?.card_id;
     
     elements.cardsGrid.innerHTML = state.allCards.map(card => {
-        const level = getRecallLevel(card.recall_probability);
-        const isCurrent = card.card_id === currentId;
         const percent = Math.round(card.recall_probability * 100);
+        const color = getRecallColor(card.recall_probability);
+        const isCurrent = card.card_id === currentId;
         
-        return `
-            <div class="card-block ${level} ${isCurrent ? 'current' : ''}" 
-                 data-card-id="${card.card_id}"
-                 title="Card ${card.card_id + 1}: ${percent}% recall">
-                ${card.card_id + 1}
-                <span class="card-block-tooltip">${percent}% recall</span>
-            </div>
-        `;
+        return createProgressRing(percent, color, card.card_id + 1, isCurrent);
     }).join('');
 }
 
@@ -297,8 +381,7 @@ function updateCardsTable() {
                 <td class="recall-cell ${level}">${percent}%</td>
                 <td>${card.num_reviews}</td>
                 <td>${card.num_reviews > 0 ? Math.round(card.past_accuracy * 100) + '%' : '-'}</td>
-                <td>${card.num_reviews > 0 ? 'Recently' : 'Never'}</td>
-                <td>${'★'.repeat(card.difficulty)}${'☆'.repeat(5 - card.difficulty)}</td>
+                <td>${'&#9733;'.repeat(card.difficulty)}${'&#9734;'.repeat(5 - card.difficulty)}</td>
             </tr>
         `;
     }).join('');
@@ -331,7 +414,7 @@ async function handleAnswer(correct) {
         if (result.next_card) {
             updateCardDisplay(result.next_card);
         } else {
-            elements.loadingState.innerHTML = '<p>All cards reviewed! Great job! 🎉</p>';
+            elements.loadingState.innerHTML = '<p>All cards reviewed! Great job!</p>';
             showState('loading');
         }
     }

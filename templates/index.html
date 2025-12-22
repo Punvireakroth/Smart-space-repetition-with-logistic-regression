@@ -72,10 +72,19 @@
 
                     <div class="answer-buttons">
                         <button class="btn btn-success btn-lg" id="correctBtn">
-                            <span class="btn-icon">✓</span> I Got It Right
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            I Got It Right
                         </button>
                         <button class="btn btn-danger btn-lg" id="incorrectBtn">
-                            <span class="btn-icon">✗</span> I Got It Wrong
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="3">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                            I Got It Wrong
                         </button>
                     </div>
                 </div>
@@ -96,20 +105,20 @@
         </div>
 
         <div class="viz-container">
-            <!-- All Cards Overview - Visual Grid -->
+            <!-- All Cards Overview - Visual Grid with Progress Rings -->
             <div class="viz-card">
                 <div class="viz-card-header">
                     <h3>All 8 Cards</h3>
                     <button class="btn btn-secondary btn-sm" id="viewAllBtn">View Details</button>
                 </div>
-                <p class="viz-description">Cards are colored by how likely you are to remember them</p>
+                <p class="viz-description">Each ring shows how likely you'll remember that card</p>
                 <div class="cards-grid" id="cardsGrid">
-                    <!-- Cards will be rendered here as colored blocks -->
+                    <!-- Cards will be rendered here with circular progress -->
                 </div>
                 <div class="legend">
-                    <span class="legend-item"><span class="legend-color high"></span> High recall (70%+)</span>
-                    <span class="legend-item"><span class="legend-color medium"></span> Medium (40-70%)</span>
-                    <span class="legend-item"><span class="legend-color low"></span> Low recall (&lt;40%)</span>
+                    <span class="legend-item"><span class="legend-color high"></span> Strong (60%+)</span>
+                    <span class="legend-item"><span class="legend-color medium"></span> Okay (35-60%)</span>
+                    <span class="legend-item"><span class="legend-color low"></span> Weak (&lt;35%)</span>
                 </div>
             </div>
 
@@ -119,28 +128,49 @@
                 <p class="viz-description">The model prioritizes cards you might forget</p>
                 <div class="explanation-box" id="explanationBox">
                     <div class="explanation-item">
-                        <span class="explanation-icon">📅</span>
+                        <svg class="explanation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
                         <div class="explanation-content">
                             <span class="explanation-label">Last reviewed</span>
                             <span class="explanation-value" id="explainDays">--</span>
                         </div>
                     </div>
                     <div class="explanation-item">
-                        <span class="explanation-icon">🔄</span>
+                        <svg class="explanation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
                         <div class="explanation-content">
                             <span class="explanation-label">Times practiced</span>
                             <span class="explanation-value" id="explainReviews">--</span>
                         </div>
                     </div>
                     <div class="explanation-item">
-                        <span class="explanation-icon">📊</span>
+                        <svg class="explanation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
                         <div class="explanation-content">
                             <span class="explanation-label">Your accuracy</span>
                             <span class="explanation-value" id="explainAccuracy">--</span>
                         </div>
                     </div>
                     <div class="explanation-item">
-                        <span class="explanation-icon">⭐</span>
+                        <svg class="explanation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polygon
+                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                            </polygon>
+                        </svg>
                         <div class="explanation-content">
                             <span class="explanation-label">Difficulty</span>
                             <span class="explanation-value" id="explainDifficulty">--</span>
@@ -202,7 +232,6 @@
                         <th>Recall %</th>
                         <th>Reviews</th>
                         <th>Accuracy</th>
-                        <th>Days Since</th>
                         <th>Difficulty</th>
                     </tr>
                 </thead>
