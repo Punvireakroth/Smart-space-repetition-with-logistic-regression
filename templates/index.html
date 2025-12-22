@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Study Session | Smart Flashcards{% endblock %}
+
+{% block content %}
+<div class="split-layout">
+    <!-- Left Panel - Flashcard Interaction (70%) -->
+    <div class="panel panel-main">
+        <div class="panel-header">
+            <h2>Study Session</h2>
+            <div class="session-stats" id="sessionStats">
+                <span class="stat">
+                    <span class="stat-label">Reviewed</span>
+                    <span class="stat-value" id="statReviewed">0</span>
+                </span>
+                <span class="stat">
+                    <span class="stat-label">Correct</span>
+                    <span class="stat-value" id="statCorrect">0</span>
+                </span>
+                <span class="stat">
+                    <span class="stat-label">Accuracy</span>
+                    <span class="stat-value" id="statAccuracy">0%</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Flashcard -->
+        <div class="flashcard-container">
+            <div class="flashcard" id="flashcard">
+                <!-- Loading State -->
+                <div class="flashcard-loading" id="loadingState">
+                    <p>Loading next card...</p>
+                </div>
+
+                <!-- Question State -->
+                <div class="flashcard-content" id="questionState" style="display: none;">
+                    <div class="card-meta">
+                        <span class="difficulty" id="cardDifficulty"></span>
+                        <span class="recall-badge" id="recallBadge">
+                            <span class="recall-value" id="recallValue">--</span>% predicted recall
+                        </span>
+                    </div>
+
+                    <div class="card-question">
+                        <span class="label">Question</span>
+                        <p id="questionText">Loading...</p>
+                    </div>
+
+                    <button class="btn btn-primary btn-lg" id="showAnswerBtn">
+                        Show Answer
+                    </button>
+                </div>
+
+                <!-- Answer State -->
+                <div class="flashcard-content" id="answerState" style="display: none;">
+                    <div class="card-meta">
+                        <span class="difficulty" id="cardDifficulty2"></span>
+                        <span class="recall-badge" id="recallBadge2">
+                            <span class="recall-value" id="recallValue2">--</span>% predicted recall
+                        </span>
+                    </div>
+
+                    <div class="card-question faded">
+                        <span class="label">Question</span>
+                        <p id="questionText2">Loading...</p>
+                    </div>
+
+                    <div class="card-answer">
+                        <span class="label">Answer</span>
+                        <p id="answerText">Loading...</p>
+                    </div>
+
+                    <div class="answer-buttons">
+                        <button class="btn btn-success btn-lg" id="correctBtn">
+                            <span class="btn-icon">✓</span> I Got It Right
+                        </button>
+                        <button class="btn btn-danger btn-lg" id="incorrectBtn">
+                            <span class="btn-icon">✗</span> I Got It Wrong
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Priority Reason -->
+            <div class="priority-reason" id="priorityReason">
+                <span class="priority-label">Why this card?</span>
+                <span class="priority-text" id="priorityText">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel - Simplified Visualizations (30%) -->
+    <div class="panel panel-viz">
+        <div class="panel-header">
+            <h2>How Active Recall Works</h2>
+        </div>
+
+        <div class="viz-container">
+            <!-- All Cards Overview - Visual Grid -->
+            <div class="viz-card">
+                <div class="viz-card-header">
+                    <h3>All 8 Cards</h3>
+                    <button class="btn btn-secondary btn-sm" id="viewAllBtn">View Details</button>
+                </div>
+                <p class="viz-description">Cards are colored by how likely you are to remember them</p>
+                <div class="cards-grid" id="cardsGrid">
+                    <!-- Cards will be rendered here as colored blocks -->
+                </div>
+                <div class="legend">
+                    <span class="legend-item"><span class="legend-color high"></span> High recall (70%+)</span>
+                    <span class="legend-item"><span class="legend-color medium"></span> Medium (40-70%)</span>
+                    <span class="legend-item"><span class="legend-color low"></span> Low recall (&lt;40%)</span>
+                </div>
+            </div>
+
+            <!-- Why This Card Was Chosen -->
+            <div class="viz-card">
+                <h3>Why The Model Chose This Card</h3>
+                <p class="viz-description">The model prioritizes cards you might forget</p>
+                <div class="explanation-box" id="explanationBox">
+                    <div class="explanation-item">
+                        <span class="explanation-icon">📅</span>
+                        <div class="explanation-content">
+                            <span class="explanation-label">Last reviewed</span>
+                            <span class="explanation-value" id="explainDays">--</span>
+                        </div>
+                    </div>
+                    <div class="explanation-item">
+                        <span class="explanation-icon">🔄</span>
+                        <div class="explanation-content">
+                            <span class="explanation-label">Times practiced</span>
+                            <span class="explanation-value" id="explainReviews">--</span>
+                        </div>
+                    </div>
+                    <div class="explanation-item">
+                        <span class="explanation-icon">📊</span>
+                        <div class="explanation-content">
+                            <span class="explanation-label">Your accuracy</span>
+                            <span class="explanation-value" id="explainAccuracy">--</span>
+                        </div>
+                    </div>
+                    <div class="explanation-item">
+                        <span class="explanation-icon">⭐</span>
+                        <div class="explanation-content">
+                            <span class="explanation-label">Difficulty</span>
+                            <span class="explanation-value" id="explainDifficulty">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recall Probability Gauge -->
+            <div class="viz-card">
+                <h3>Predicted Recall Probability</h3>
+                <p class="viz-description">How likely you are to remember this card</p>
+                <div class="gauge-container">
+                    <div class="gauge">
+                        <div class="gauge-fill" id="gaugeFill"></div>
+                        <div class="gauge-text">
+                            <span class="gauge-value" id="gaugeValue">--</span>
+                            <span class="gauge-label">%</span>
+                        </div>
+                    </div>
+                    <div class="gauge-labels">
+                        <span>0%</span>
+                        <span>50%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+                <p class="gauge-interpretation" id="gaugeInterpretation">Loading...</p>
+            </div>
+
+            <!-- Session Progress -->
+            <div class="viz-card">
+                <h3>Today's Progress</h3>
+                <div class="progress-container">
+                    <div class="progress-bar-wrapper">
+                        <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-stats">
+                        <span id="progressText">0 cards reviewed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View All Cards Modal -->
+<div class="modal" id="cardsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>All Flashcards</h2>
+            <button class="modal-close" id="closeModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <table class="cards-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Question</th>
+                        <th>Recall %</th>
+                        <th>Reviews</th>
+                        <th>Accuracy</th>
+                        <th>Days Since</th>
+                        <th>Difficulty</th>
+                    </tr>
+                </thead>
+                <tbody id="cardsTableBody">
+                    <!-- Cards will be rendered here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden data for JS -->
+<div id="currentCardId" data-card-id="" style="display: none;"></div>
+{% endblock %}
