@@ -558,15 +558,29 @@ body {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: opacity 0.2s ease;
+    transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .card-ring:hover {
-    opacity: 0.7;
+    transform: scale(1.1);
+    z-index: 10;
 }
 
 .card-ring.current {
-    opacity: 1;
+    transform: scale(1.05);
+}
+
+/* Background colors based on recall level */
+.card-ring.high svg circle:first-child {
+    fill: rgba(22, 163, 74, 0.12);
+}
+
+.card-ring.medium svg circle:first-child {
+    fill: rgba(202, 138, 4, 0.12);
+}
+
+.card-ring.low svg circle:first-child {
+    fill: rgba(220, 38, 38, 0.12);
 }
 
 .card-ring svg {
@@ -599,6 +613,44 @@ body {
 
 .progress-ring-circle {
     transition: stroke-dashoffset 0.5s ease, stroke 0.3s ease;
+}
+
+/* Tooltip for question on hover */
+.card-ring-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-text);
+    color: var(--color-bg-secondary);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: var(--font-size-xs);
+    white-space: nowrap;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    z-index: 100;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-ring-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--color-text);
+}
+
+.card-ring:hover .card-ring-tooltip {
+    opacity: 1;
+    visibility: visible;
 }
 
 /* Legend */

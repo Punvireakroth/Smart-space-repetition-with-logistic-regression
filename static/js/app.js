@@ -284,25 +284,51 @@ function updateStats(stats) {
 }
 
 /**
- * Create SVG circular progress ring
+ * Get background color for ring based on recall probability
  */
-function createProgressRing(percent, color, cardNum, isCurrent) {
+function getRingBgColor(probability) {
+    const level = getRecallLevel(probability);
+    if (level === 'high') return 'rgba(22, 163, 74, 0.15)';  // green
+    if (level === 'medium') return 'rgba(202, 138, 4, 0.15)'; // yellow
+    return 'rgba(220, 38, 38, 0.15)'; // red
+}
+
+/**
+ * Create SVG circular progress ring with background color and tooltip
+ */
+function createProgressRing(percent, color, cardNum, isCurrent, question = '') {
     const size = 56;
     const strokeWidth = 4;
     const radius = (size - strokeWidth) / 2;
     const circumference = radius * 2 * Math.PI;
     const offset = circumference - (percent / 100) * circumference;
+    const bgColor = getRingBgColor(percent / 100);
+    const level = getRecallLevel(percent / 100);
+    
+    // Escape question for HTML attribute
+    const escapedQuestion = question.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     
     return `
-        <div class="card-ring ${isCurrent ? 'current' : ''}" data-card-id="${cardNum - 1}">
+        <div class="card-ring ${isCurrent ? 'current' : ''} ${level}" 
+             data-card-id="${cardNum - 1}" 
+             data-question="${escapedQuestion}"
+             title="${escapedQuestion}">
             <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-                <!-- Background circle -->
+                <!-- Background fill circle -->
+                <circle 
+                    cx="${size/2}" 
+                    cy="${size/2}" 
+                    r="${radius - 2}"
+                    fill="${bgColor}"
+                    stroke="none"
+                />
+                <!-- Background stroke circle -->
                 <circle 
                     cx="${size/2}" 
                     cy="${size/2}" 
                     r="${radius}"
                     fill="none"
-                    stroke="#e5e7eb"
+                    stroke="#e5e5e5"
                     stroke-width="${strokeWidth}"
                 />
                 <!-- Progress circle -->
@@ -324,6 +350,7 @@ function createProgressRing(percent, color, cardNum, isCurrent) {
                 <span class="card-ring-num">${cardNum}</span>
                 <span class="card-ring-percent">${percent}%</span>
             </div>
+            <div class="card-ring-tooltip">${question}</div>
         </div>
     `;
 }
@@ -337,8 +364,9 @@ function updateCardsGrid() {
         const percent = Math.round(card.recall_probability * 100);
         const color = getRecallColor(card.recall_probability);
         const isCurrent = card.card_id === currentId;
+        const question = card.question || '';
         
-        return createProgressRing(percent, color, card.card_id + 1, isCurrent);
+        return createProgressRing(percent, color, card.card_id + 1, isCurrent, question);
     }).join('');
 }
 
