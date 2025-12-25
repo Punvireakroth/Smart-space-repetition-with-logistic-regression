@@ -111,7 +111,7 @@
                     <h3>All 8 Cards</h3>
                     <button class="btn btn-secondary btn-sm" id="viewAllBtn">View Details</button>
                 </div>
-                <p class="viz-description">Each ring shows how likely you'll remember that card</p>
+                <!-- <p class="viz-description">Each ring shows how likely you'll remember that card</p> -->
                 <div class="cards-grid" id="cardsGrid">
                     <!-- Cards will be rendered here with circular progress -->
                 </div>
@@ -175,40 +175,6 @@
                             <span class="explanation-label">Difficulty</span>
                             <span class="explanation-value" id="explainDifficulty">--</span>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recall Probability Gauge -->
-            <div class="viz-card">
-                <h3>Predicted Recall Probability</h3>
-                <p class="viz-description">How likely you are to remember this card</p>
-                <div class="gauge-container">
-                    <div class="gauge">
-                        <div class="gauge-fill" id="gaugeFill"></div>
-                        <div class="gauge-text">
-                            <span class="gauge-value" id="gaugeValue">--</span>
-                            <span class="gauge-label">%</span>
-                        </div>
-                    </div>
-                    <div class="gauge-labels">
-                        <span>0%</span>
-                        <span>50%</span>
-                        <span>100%</span>
-                    </div>
-                </div>
-                <p class="gauge-interpretation" id="gaugeInterpretation">Loading...</p>
-            </div>
-
-            <!-- Session Progress -->
-            <div class="viz-card">
-                <h3>Today's Progress</h3>
-                <div class="progress-container">
-                    <div class="progress-bar-wrapper">
-                        <div class="progress-bar" id="progressBar" style="width: 0%"></div>
-                    </div>
-                    <div class="progress-stats">
-                        <span id="progressText">0 cards reviewed</span>
                     </div>
                 </div>
             </div>

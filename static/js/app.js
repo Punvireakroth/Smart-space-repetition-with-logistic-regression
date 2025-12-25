@@ -37,58 +37,8 @@ const state = {
 // DOM Elements
 // ============================================
 
-const elements = {
-    // States
-    loadingState: document.getElementById('loadingState'),
-    questionState: document.getElementById('questionState'),
-    answerState: document.getElementById('answerState'),
-    
-    // Card content
-    questionText: document.getElementById('questionText'),
-    questionText2: document.getElementById('questionText2'),
-    answerText: document.getElementById('answerText'),
-    cardDifficulty: document.getElementById('cardDifficulty'),
-    cardDifficulty2: document.getElementById('cardDifficulty2'),
-    recallValue: document.getElementById('recallValue'),
-    recallValue2: document.getElementById('recallValue2'),
-    priorityText: document.getElementById('priorityText'),
-    currentCardId: document.getElementById('currentCardId'),
-    
-    // Explanation items
-    explainDays: document.getElementById('explainDays'),
-    explainReviews: document.getElementById('explainReviews'),
-    explainAccuracy: document.getElementById('explainAccuracy'),
-    explainDifficulty: document.getElementById('explainDifficulty'),
-    
-    // Gauge
-    gaugeFill: document.getElementById('gaugeFill'),
-    gaugeValue: document.getElementById('gaugeValue'),
-    gaugeInterpretation: document.getElementById('gaugeInterpretation'),
-    
-    // Cards grid
-    cardsGrid: document.getElementById('cardsGrid'),
-    
-    // Stats
-    statReviewed: document.getElementById('statReviewed'),
-    statCorrect: document.getElementById('statCorrect'),
-    statAccuracy: document.getElementById('statAccuracy'),
-    
-    // Progress
-    progressBar: document.getElementById('progressBar'),
-    progressText: document.getElementById('progressText'),
-    
-    // Buttons
-    showAnswerBtn: document.getElementById('showAnswerBtn'),
-    correctBtn: document.getElementById('correctBtn'),
-    incorrectBtn: document.getElementById('incorrectBtn'),
-    resetBtn: document.getElementById('resetBtn'),
-    viewAllBtn: document.getElementById('viewAllBtn'),
-    
-    // Modal
-    modal: document.getElementById('cardsModal'),
-    closeModal: document.getElementById('closeModal'),
-    cardsTableBody: document.getElementById('cardsTableBody')
-};
+// Initialize elements object - will be populated when DOM is ready
+const elements = {};
 
 // ============================================
 // API Functions
@@ -97,8 +47,14 @@ const elements = {
 async function fetchNextCard() {
     try {
         const response = await fetch('/api/next-card');
-        if (!response.ok) throw new Error('Failed to fetch card');
-        return await response.json();
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('API Error:', response.status, errorText);
+            throw new Error(`Failed to fetch card: ${response.status} ${errorText}`);
+        }
+        const data = await response.json();
+        console.log('Fetched card:', data);
+        return data;
     } catch (error) {
         console.error('Error fetching next card:', error);
         return null;
@@ -214,6 +170,16 @@ function formatDaysSince(days) {
 // ============================================
 
 function showState(stateName) {
+    // Safety checks
+    if (!elements.loadingState || !elements.questionState || !elements.answerState) {
+        console.error('Missing state elements:', {
+            loadingState: !!elements.loadingState,
+            questionState: !!elements.questionState,
+            answerState: !!elements.answerState
+        });
+        return;
+    }
+    
     elements.loadingState.style.display = 'none';
     elements.questionState.style.display = 'none';
     elements.answerState.style.display = 'none';
@@ -243,48 +209,56 @@ function updateCardDisplay(card) {
     if (!card) return;
     
     state.currentCard = card;
-    elements.currentCardId.dataset.cardId = card.card_id;
+    if (elements.currentCardId) elements.currentCardId.dataset.cardId = card.card_id;
     
     // Update question text
-    elements.questionText.textContent = card.question;
-    elements.questionText2.textContent = card.question;
-    elements.answerText.textContent = card.answer;
+    if (elements.questionText) elements.questionText.textContent = card.question;
+    if (elements.questionText2) elements.questionText2.textContent = card.question;
+    if (elements.answerText) elements.answerText.textContent = card.answer;
     
     // Update difficulty stars
     const difficultyHtml = renderDifficulty(card.difficulty);
-    elements.cardDifficulty.innerHTML = difficultyHtml;
-    elements.cardDifficulty2.innerHTML = difficultyHtml;
+    if (elements.cardDifficulty) elements.cardDifficulty.innerHTML = difficultyHtml;
+    if (elements.cardDifficulty2) elements.cardDifficulty2.innerHTML = difficultyHtml;
     
     // Update recall probability
     const recallPercent = Math.round(card.recall_probability * 100);
-    elements.recallValue.textContent = recallPercent;
-    elements.recallValue2.textContent = recallPercent;
+    if (elements.recallValue) elements.recallValue.textContent = recallPercent;
+    if (elements.recallValue2) elements.recallValue2.textContent = recallPercent;
     
     // Update priority reason
-    elements.priorityText.textContent = card.priority_reason;
+    if (elements.priorityText) elements.priorityText.textContent = card.priority_reason;
     
-    // Update explanation box
+    // Update explanation box (if elements exist)
     if (card.features) {
-        elements.explainDays.textContent = formatDaysSince(card.features.days_since_review);
-        elements.explainReviews.textContent = card.features.num_reviews === 0 
+        if (elements.explainDays) elements.explainDays.textContent = formatDaysSince(card.features.days_since_review);
+        if (elements.explainReviews) elements.explainReviews.textContent = card.features.num_reviews === 0 
             ? 'Never practiced' 
             : `${card.features.num_reviews} time${card.features.num_reviews > 1 ? 's' : ''}`;
-        elements.explainAccuracy.textContent = card.features.num_reviews === 0 
+        if (elements.explainAccuracy) elements.explainAccuracy.textContent = card.features.num_reviews === 0 
             ? 'No data yet' 
             : `${Math.round(card.features.past_accuracy * 100)}%`;
-        elements.explainDifficulty.textContent = ['Easy', 'Easy', 'Medium', 'Hard', 'Hard'][card.difficulty - 1] || 'Medium';
+        if (elements.explainDifficulty) elements.explainDifficulty.textContent = ['Easy', 'Easy', 'Medium', 'Hard', 'Hard'][card.difficulty - 1] || 'Medium';
     }
     
-    // Update gauge
-    updateGauge(card.recall_probability);
+    // Update gauge (if elements exist)
+    if (elements.gaugeFill) {
+        updateGauge(card.recall_probability);
+    }
     
-    // Update cards grid to highlight current
-    updateCardsGrid();
+    // Update cards grid to highlight current (if element exists)
+    if (elements.cardsGrid) {
+        updateCardsGrid();
+    }
     
     showState('question');
 }
 
 function updateGauge(probability) {
+    if (!elements.gaugeFill || !elements.gaugeValue || !elements.gaugeInterpretation) {
+        return; // Optional elements not present
+    }
+    
     const percent = Math.round(probability * 100);
     const level = getRecallLevel(probability);
     
@@ -297,14 +271,16 @@ function updateGauge(probability) {
 function updateStats(stats) {
     state.stats = stats;
     
-    elements.statReviewed.textContent = stats.total;
-    elements.statCorrect.textContent = stats.correct;
-    elements.statAccuracy.textContent = Math.round(stats.accuracy * 100) + '%';
+    if (elements.statReviewed) elements.statReviewed.textContent = stats.total;
+    if (elements.statCorrect) elements.statCorrect.textContent = stats.correct;
+    if (elements.statAccuracy) elements.statAccuracy.textContent = Math.round(stats.accuracy * 100) + '%';
     
-    // Update progress bar
-    const progressPercent = Math.min(stats.total / CONFIG.TOTAL_CARDS * 100, 100);
-    elements.progressBar.style.width = progressPercent + '%';
-    elements.progressText.textContent = `${stats.total} of ${CONFIG.TOTAL_CARDS} cards reviewed today`;
+    // Update progress bar (if elements exist)
+    if (elements.progressBar && elements.progressText) {
+        const progressPercent = Math.min(stats.total / CONFIG.TOTAL_CARDS * 100, 100);
+        elements.progressBar.style.width = progressPercent + '%';
+        elements.progressText.textContent = `${stats.total} of ${CONFIG.TOTAL_CARDS} cards reviewed today`;
+    }
 }
 
 /**
@@ -353,7 +329,7 @@ function createProgressRing(percent, color, cardNum, isCurrent) {
 }
 
 function updateCardsGrid() {
-    if (state.allCards.length === 0) return;
+    if (!elements.cardsGrid || state.allCards.length === 0) return;
     
     const currentId = state.currentCard?.card_id;
     
@@ -447,27 +423,42 @@ async function init() {
     // Show loading state
     showState('loading');
     
-    // Load initial data
-    const [card, stats, allCards] = await Promise.all([
-        fetchNextCard(),
-        fetchStats(),
-        fetchAllCards()
-    ]);
-    
-    // Store all cards
-    state.allCards = allCards;
-    
-    // Update stats
-    updateStats(stats);
-    
-    // Update cards grid
-    updateCardsGrid();
-    
-    // Show first card
-    if (card) {
-        updateCardDisplay(card);
-    } else {
-        elements.loadingState.innerHTML = '<p>No cards available. Please add flashcards first.</p>';
+    try {
+        console.log('Initializing app...');
+        
+        // Load initial data
+        const [card, stats, allCards] = await Promise.all([
+            fetchNextCard(),
+            fetchStats(),
+            fetchAllCards()
+        ]);
+        
+        console.log('Loaded data:', { card, stats, allCards });
+        
+        // Store all cards
+        state.allCards = allCards || [];
+        
+        // Update stats
+        if (stats) {
+            updateStats(stats);
+        }
+        
+        // Update cards grid
+        updateCardsGrid();
+        
+        // Show first card
+        if (card) {
+            console.log('Displaying card:', card);
+            updateCardDisplay(card);
+        } else {
+            console.warn('No card returned from API');
+            elements.loadingState.innerHTML = '<p>No cards available. Please add flashcards first.</p>';
+            showState('loading');
+        }
+    } catch (error) {
+        console.error('Error during initialization:', error);
+        elements.loadingState.innerHTML = `<p>Error loading cards: ${error.message}</p>`;
+        showState('loading');
     }
 }
 
@@ -476,27 +467,91 @@ async function init() {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize all DOM elements
+    elements.loadingState = document.getElementById('loadingState');
+    elements.questionState = document.getElementById('questionState');
+    elements.answerState = document.getElementById('answerState');
+    elements.questionText = document.getElementById('questionText');
+    elements.questionText2 = document.getElementById('questionText2');
+    elements.answerText = document.getElementById('answerText');
+    elements.cardDifficulty = document.getElementById('cardDifficulty');
+    elements.cardDifficulty2 = document.getElementById('cardDifficulty2');
+    elements.recallValue = document.getElementById('recallValue');
+    elements.recallValue2 = document.getElementById('recallValue2');
+    elements.priorityText = document.getElementById('priorityText');
+    elements.currentCardId = document.getElementById('currentCardId');
+    elements.explainDays = document.getElementById('explainDays');
+    elements.explainReviews = document.getElementById('explainReviews');
+    elements.explainAccuracy = document.getElementById('explainAccuracy');
+    elements.explainDifficulty = document.getElementById('explainDifficulty');
+    elements.gaugeFill = document.getElementById('gaugeFill');
+    elements.gaugeValue = document.getElementById('gaugeValue');
+    elements.gaugeInterpretation = document.getElementById('gaugeInterpretation');
+    elements.cardsGrid = document.getElementById('cardsGrid');
+    elements.statReviewed = document.getElementById('statReviewed');
+    elements.statCorrect = document.getElementById('statCorrect');
+    elements.statAccuracy = document.getElementById('statAccuracy');
+    elements.progressBar = document.getElementById('progressBar');
+    elements.progressText = document.getElementById('progressText');
+    elements.showAnswerBtn = document.getElementById('showAnswerBtn');
+    elements.correctBtn = document.getElementById('correctBtn');
+    elements.incorrectBtn = document.getElementById('incorrectBtn');
+    elements.resetBtn = document.getElementById('resetBtn');
+    elements.viewAllBtn = document.getElementById('viewAllBtn');
+    elements.modal = document.getElementById('cardsModal');
+    elements.closeModal = document.getElementById('closeModal');
+    elements.cardsTableBody = document.getElementById('cardsTableBody');
+    
+    // Verify all required elements exist
+    const requiredElements = [
+        'loadingState', 'questionState', 'answerState', 'questionText', 
+        'answerText', 'showAnswerBtn', 'correctBtn', 'incorrectBtn'
+    ];
+    
+    const missingElements = requiredElements.filter(id => {
+        const element = document.getElementById(id);
+        if (!element) {
+            console.error(`Missing required element: ${id}`);
+            return true;
+        }
+        return false;
+    });
+    
+    if (missingElements.length > 0) {
+        console.error('Missing DOM elements:', missingElements);
+        document.body.innerHTML = `<div style="padding: 20px; color: red;">
+            <h2>Error: Missing DOM elements</h2>
+            <p>The following elements are missing: ${missingElements.join(', ')}</p>
+            <p>Please check your HTML template.</p>
+        </div>`;
+        return;
+    }
+    
+    console.log('All DOM elements found, initializing app...');
+    
     // Initialize the app
     init();
     
     // Button event listeners
-    elements.showAnswerBtn.addEventListener('click', handleShowAnswer);
-    elements.correctBtn.addEventListener('click', () => handleAnswer(true));
-    elements.incorrectBtn.addEventListener('click', () => handleAnswer(false));
-    elements.resetBtn.addEventListener('click', handleReset);
-    elements.viewAllBtn.addEventListener('click', handleViewAll);
-    elements.closeModal.addEventListener('click', handleCloseModal);
+    if (elements.showAnswerBtn) elements.showAnswerBtn.addEventListener('click', handleShowAnswer);
+    if (elements.correctBtn) elements.correctBtn.addEventListener('click', () => handleAnswer(true));
+    if (elements.incorrectBtn) elements.incorrectBtn.addEventListener('click', () => handleAnswer(false));
+    if (elements.resetBtn) elements.resetBtn.addEventListener('click', handleReset);
+    if (elements.viewAllBtn) elements.viewAllBtn.addEventListener('click', handleViewAll);
+    if (elements.closeModal) elements.closeModal.addEventListener('click', handleCloseModal);
     
     // Close modal on background click
-    elements.modal.addEventListener('click', (e) => {
-        if (e.target === elements.modal) {
-            handleCloseModal();
-        }
-    });
+    if (elements.modal) {
+        elements.modal.addEventListener('click', (e) => {
+            if (e.target === elements.modal) {
+                handleCloseModal();
+            }
+        });
+    }
     
     // Close modal on Escape key
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && elements.modal.classList.contains('active')) {
+        if (e.key === 'Escape' && elements.modal && elements.modal.classList.contains('active')) {
             handleCloseModal();
         }
     });
